@@ -1,0 +1,17 @@
+{
+  "description": "Strake Jesuit College Preparatory",
+  "logoText": "Strake Jesuit College Prep",
+  "organizationName": "Strake Jesuit College Preparatory",
+  "passTypeIdentifier": "pass.com.danielj.passgenerator",
+  "teamIdentifier": "9CVP427Q8C",
+  "backgroundColor": "rgb(8,68,52)",
+  "foregroundColor": "rgb(255,255,255)",
+  "labelColor": "rgb(197,153,62)",
+  "formatVersion": 1,
+  "generic": {
+    "auxiliaryFields": [],
+    "primaryFields": [],
+    "secondaryFields": [],
+    "backFields": []
+  }
+}
