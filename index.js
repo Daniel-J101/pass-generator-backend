@@ -37,7 +37,8 @@ exports.pass = functions.https.onRequest(async (request, response) => {
   // response.send("Hello from Firebase!");
   try {
     cors(corsOptions)(request, response, async () => {
-      console.log("started request", request.body);
+      return;
+      console.log("started request 1.1", request.body);
       const {
         schoolYear,
         barcodeData,
