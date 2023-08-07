@@ -1,12 +1,3 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
 const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const functions = require("firebase-functions");
@@ -33,12 +24,9 @@ const corsOptions = {
 };
 
 exports.pass = functions.https.onRequest(async (request, response) => {
-  // logger.info("Hello logs!", { structuredData: true });
-  // response.send("Hello from Firebase!");
   try {
     cors(corsOptions)(request, response, async () => {
-      return;
-      console.log("started request 1.1", request.body);
+      console.log("started request v1.3", request.body);
       const {
         schoolYear,
         barcodeData,
@@ -48,7 +36,7 @@ exports.pass = functions.https.onRequest(async (request, response) => {
         graduationYear,
         advisory,
         studentID,
-        imageURL,
+        imageURL, //imageURL can either be a link to an image or a base64 encoded image
       } = request.body;
 
       //request validation
@@ -70,6 +58,10 @@ exports.pass = functions.https.onRequest(async (request, response) => {
 
       if (!validateEmail(email)) {
         return response.status(400).send({ message: "Invalid email" });
+      }
+
+      if (typeof imageURL !== "string") {
+        return response.status(400).send({ message: "Invalid image" });
       }
 
       //pass info
@@ -148,8 +140,15 @@ exports.pass = functions.https.onRequest(async (request, response) => {
       });
 
       //add image to pass
-      const resp = await axios.get(imageURL, { responseType: "arraybuffer" });
-      const imageBuffer = Buffer.from(resp.data, "utf-8");
+      let imageBuffer; //add via buffer
+      if (imageURL.startsWith("http://") || imageURL.startsWith("https://")) {
+        //image is a url; convert it to a buffer
+        const resp = await axios.get(imageURL, { responseType: "arraybuffer" });
+        imageBuffer = Buffer.from(resp.data, "utf-8");
+      } else {
+        //image is a base64 encoded image
+        imageBuffer = Buffer.from(imageURL, "base64");
+      }
       pass.addBuffer("thumbnail.png", imageBuffer);
       pass.addBuffer("thumbnail@2x.png", imageBuffer);
 
@@ -160,7 +159,11 @@ exports.pass = functions.https.onRequest(async (request, response) => {
       try {
         await storage
           .file(`${schoolYear}/${serialNumber}.pkpass`)
-          .save(bufferData);
+          .save(bufferData, {
+            metadata: {
+              contentType: "application/vnd.apple.pkpass",
+            },
+          });
         console.log("file upload successful");
       } catch (error) {
         console.log("error at file upload", error);
@@ -174,10 +177,16 @@ exports.pass = functions.https.onRequest(async (request, response) => {
           name: name,
           email: email,
           passFileLocation: `${schoolYear}/${serialNumber}.pkpass`,
+          authenticationToken: authenticationToken,
         });
 
+      //get download link for pass
+      const link = await generateSignedUrl(
+        `${schoolYear}/${serialNumber}.pkpass`
+      );
+
       //send recipient email
-      await sendPassEmail(email, bufferData);
+      await sendPassEmail(email, link);
       logger.info("Created Pass!", { structuredData: true });
 
       return response.status(200).send({ message: "Pass Created" });
@@ -191,6 +200,22 @@ exports.pass = functions.https.onRequest(async (request, response) => {
 
 function generateAuthenticationToken(length) {
   return crypto.randomBytes(length).toString("hex");
+}
+
+async function generateSignedUrl(fileName) {
+  const config = {
+    action: "read",
+    expires: Date.now() + 1000 * 60 * 60 * 24, // 24 hours
+  };
+
+  try {
+    const [signedUrl] = await storage.file(fileName).getSignedUrl(config);
+    console.log(`Generated email URL successfully`);
+    return signedUrl;
+  } catch (error) {
+    console.log(`Error generating email URL: ${error}`);
+    return "";
+  }
 }
 
 function validateEmail(email) {
