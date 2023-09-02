@@ -9,6 +9,7 @@ const crypto = require("crypto");
 const { storage, db } = require("./firebase");
 const { sendPassEmail } = require("./email.service");
 const cors = require("cors");
+const sendGrid = require("@sendgrid/mail");
 require("dotenv").config();
 
 //whitelists
@@ -26,7 +27,7 @@ const corsOptions = {
 exports.pass = functions.https.onRequest(async (request, response) => {
   try {
     cors(corsOptions)(request, response, async () => {
-      console.log("started request v1.3", request.body);
+      console.log("started request v1.4", request.body);
       const {
         schoolYear,
         barcodeData,
