@@ -13,7 +13,10 @@ const sendGrid = require("@sendgrid/mail");
 require("dotenv").config();
 
 //whitelists
-const whitelist = [process.env.PRODUCTION_URL];
+const whitelist = [
+  process.env.PRODUCTION_URL,
+  process.env.ALTERNATE_PRODUCTION_URL,
+];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
