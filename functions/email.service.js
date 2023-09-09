@@ -4,16 +4,16 @@ const nodemailer = require("nodemailer");
 const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-const transport = nodemailer.createTransport({
-  service: process.env.SMPT_SERVICE,
-  auth: {
-    type: process.env.SMTP_AUTH_TYPE,
-    user: process.env.SMTP_USERNAME,
-    clientId: process.env.SMTP_CLIENT_ID,
-    clientSecret: process.env.SMTP_CLIENT_SECRET,
-    refreshToken: process.env.SMTP_REFRESH_TOKEN,
-  },
-});
+// const transport = nodemailer.createTransport({
+//   service: process.env.SMPT_SERVICE,
+//   auth: {
+//     type: process.env.SMTP_AUTH_TYPE,
+//     user: process.env.SMTP_USERNAME,
+//     clientId: process.env.SMTP_CLIENT_ID,
+//     clientSecret: process.env.SMTP_CLIENT_SECRET,
+//     refreshToken: process.env.SMTP_REFRESH_TOKEN,
+//   },
+// });
 
 // /**
 //  * send pass email
@@ -53,8 +53,11 @@ const sendPassEmail = async (recipient, passURL) => {
   try {
     let x = await sgMail.send(msg);
     console.log("sent email", x);
+    return 200;
   } catch (error) {
     console.log("error at sending email", error);
+    console.log(error.response.body.errors);
+    return 400;
   }
 };
 

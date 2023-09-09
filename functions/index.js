@@ -190,10 +190,15 @@ exports.pass = functions.https.onRequest(async (request, response) => {
       );
 
       //send recipient email
-      await sendPassEmail(email, link);
-      logger.info("Created Pass!", { structuredData: true });
+      const result = await sendPassEmail(email, link);
+      if (result == 200) {
+        logger.info("Created Pass!", { structuredData: true });
 
-      return response.status(200).send({ message: "Pass Created" });
+        return response.status(200).send({ message: "Pass Created" });
+      } else {
+        logger.info("Failed to send email!", { structuredData: true });
+        return response.status(400).send({ message: "Failed sending pass" });
+      }
     });
   } catch (error) {
     console.log("error", error);
